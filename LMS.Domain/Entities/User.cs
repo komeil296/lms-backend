@@ -1,3 +1,5 @@
+using LMS.Domain.Enums;
+
 namespace LMS.Domain.Entities;
 public class User
 {
@@ -6,7 +8,7 @@ public class User
     public string PasswordHash{get;set;}=string.Empty;
 
     public DateTime CraetedAt{get;set;}=DateTime.UtcNow;
-    public string Role{get;set;}="Student";
+    public UserRole Role{get;set;}=UserRole.Student;
     public string? RefreshToken{get;set;}
     public DateTime? RefreshTokenExpiryTime{get;set;}
 }

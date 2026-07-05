@@ -1,22 +1,49 @@
+using System.Reflection;
+using System.Text;
 using LMS.Application.Interfaces;
 using LMS.Infrastructure.Data;
 using LMS.Infrastructure.Repositories;
 using LMS.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+Log.Logger=new LoggerConfiguration().WriteTo.Console().WriteTo.File("logs/lms-.txt",rollingInterval:RollingInterval.Day).CreateLogger();//komil before createBuilder
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
+builder.Host.UseSerilog();//komeil
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddScoped<IUserRepository,UserRepository>();//komeil
 builder.Services.AddScoped<IPasswordService,PasswordService>();//komeil
+builder.Services.AddAutoMapper(Assembly.Load("LMS.Application"));//komeil
+builder.Services.AddScoped<IAUthService,AuthService>();//komeil
+builder.Services.AddScoped<ITokenService,TokenService>();//komeil
+var jwt=builder.Configuration.GetSection("JWT");//komeil
+//Komeil -------------------------Auth------------
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters=new TokenValidationParameters
+    {
+        ValidateIssuer=true,
+        ValidateAudience=true,
+        ValidateLifetime=true,
+        ValidateIssuerSigningKey=true,
+        ValidIssuer=jwt["Issuer"],
+        ValidAudience=jwt["Audience"],
+        IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!))
+    };
+});
+builder.Services.AddAuthorization();
+//----------------------------------
 var app = builder.Build();
-
+app.UseAuthentication();
+app.UseAuthorization();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
