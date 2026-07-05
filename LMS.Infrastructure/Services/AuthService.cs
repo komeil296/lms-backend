@@ -34,14 +34,26 @@ public class AuthService:IAUthService
 
     }
      
-    public async Task<string?> LoginAsync(LoginDto dto)
+    public async Task<(string? accessToken,string? refreshToken)> LoginAsync(LoginDto dto)
     {
         var user=await _userRepository.GetByUSernameAsync(dto.Username);
-        if(user==null) return null;
-        if(!_passwordService.VerifyPassword(dto.Password,user.PasswordHash)) return null;
+        if(user==null) return (null,null);
+        if(!_passwordService.VerifyPassword(dto.Password,user.PasswordHash)) return (null,null);
         
-        var token=_tokenService.CreateToken(user);
-        return token;
+    
+        var accessToken=_tokenService.CreateToken(user);
+        var refreshToken=_tokenService.GenerateRefreshToken();
+        user.RefreshToken=refreshToken;
+        user.RefreshTokenExpiryTime=DateTime.UtcNow.AddDays(7);
+        await _userRepository.SaveChangesAsync();
+        return (accessToken,refreshToken);
 
+    }
+    public async Task<string?> RefreshTokenAsync(string refreshToken)
+    {
+        var user=await _userRepository.GetByRefreshTokenAsync(refreshToken);
+        if(user==null) return null;
+        if(user.RefreshTokenExpiryTime<DateTime.UtcNow) return null;
+        return _tokenService.CreateToken(user);
     }
 }
