@@ -1,4 +1,7 @@
+using LMS.Application.Interfaces;
 using LMS.Infrastructure.Data;
+using LMS.Infrastructure.Repositories;
+using LMS.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddScoped<IUserRepository,UserRepository>();//komeil
+builder.Services.AddScoped<IPasswordService,PasswordService>();//komeil
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
