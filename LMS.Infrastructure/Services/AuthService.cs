@@ -1,4 +1,6 @@
 using AutoMapper;
+using Azure.Core;
+using LMS.Application.DTOs;
 using LMS.Application.DTOs.Auth;
 using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
@@ -34,26 +36,53 @@ public class AuthService:IAUthService
 
     }
      
-    public async Task<(string? accessToken,string? refreshToken)> LoginAsync(LoginDto dto)
+    public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
     {
         var user=await _userRepository.GetByUSernameAsync(dto.Username);
-        if(user==null) return (null,null);
-        if(!_passwordService.VerifyPassword(dto.Password,user.PasswordHash)) return (null,null);
+        if(user==null) return null;
+        if(!_passwordService.VerifyPassword(dto.Password,user.PasswordHash)) return null;
         
     
         var accessToken=_tokenService.CreateToken(user);
         var refreshToken=_tokenService.GenerateRefreshToken();
         user.RefreshToken=refreshToken;
         user.RefreshTokenExpiryTime=DateTime.UtcNow.AddDays(7);
+
         await _userRepository.SaveChangesAsync();
-        return (accessToken,refreshToken);
+        return new AuthResponseDto
+        {
+            AccessToken=accessToken,
+            RefreshToken=refreshToken
+        };
 
     }
-    public async Task<string?> RefreshTokenAsync(string refreshToken)
+    public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken)
     {
         var user=await _userRepository.GetByRefreshTokenAsync(refreshToken);
         if(user==null) return null;
         if(user.RefreshTokenExpiryTime<DateTime.UtcNow) return null;
-        return _tokenService.CreateToken(user);
+        
+        var newAccessToken=_tokenService.CreateToken(user);
+        var newRefreshToken=_tokenService.GenerateRefreshToken();
+        user.RefreshToken=newRefreshToken;
+        user.RefreshTokenExpiryTime=DateTime.UtcNow.AddDays(7);
+        await _userRepository.SaveChangesAsync();
+        return new AuthResponseDto
+        {
+            AccessToken=newAccessToken,
+            RefreshToken=newRefreshToken
+        };
+    }
+
+    public async Task<bool> LogoutAsync(string refreshToken)
+    {
+        var user=await _userRepository.GetByRefreshTokenAsync(refreshToken);
+        if(user==null) return false;
+        user.RefreshToken=null;
+        user.RefreshTokenExpiryTime=null;
+        await _userRepository.SaveChangesAsync();
+        return true;
+
+
     }
 }
