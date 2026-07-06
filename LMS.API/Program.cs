@@ -1,10 +1,13 @@
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Text;
 using LMS.Application.Interfaces;
+using LMS.Application.Mappings;
 using LMS.Infrastructure.Data;
 using LMS.Infrastructure.Repositories;
 using LMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -21,9 +24,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.AddScoped<IUserRepository,UserRepository>();//komeil
 builder.Services.AddScoped<IPasswordService,PasswordService>();//komeil
-builder.Services.AddAutoMapper(Assembly.Load("LMS.Application"));//komeil
+///builder.Services.AddAutoMapper(Assembly.Load("LMS.Application"));//komeil
+builder.Services.AddAutoMapper(typeof(AuthMappingProfile));
+builder.Services.AddAutoMapper(typeof(CoursePofile));
 builder.Services.AddScoped<IAUthService,AuthService>();//komeil
 builder.Services.AddScoped<ITokenService,TokenService>();//komeil
+builder.Services.AddControllers();//komeil
+builder.Services.AddScoped<ICourseRepository,CourseRepoitory>();
+builder.Services.AddScoped<ICourseService,CourseService>();
+builder.Services.AddEndpointsApiExplorer();//komeil
+builder.Services.AddSwaggerGen();//komeil
+
 var jwt=builder.Configuration.GetSection("JWT");//komeil
 //Komeil -------------------------Auth------------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
@@ -44,6 +55,8 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSwagger();
+app.UseSwaggerUI();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

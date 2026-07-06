@@ -9,6 +9,7 @@ public class AppDbContext :DbContext
         
     }
     public DbSet<User> Users=>Set<User>();
+    public DbSet<Course> Courses{get;set;}
      protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
