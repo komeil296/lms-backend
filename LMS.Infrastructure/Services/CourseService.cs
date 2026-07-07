@@ -1,7 +1,8 @@
 using AutoMapper;
-using LMS.Application.CourseNameSpace;
+using LMS.Application.DTOs.CourseNameSpace;
 using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
+using LMS.Infrastructure.Repositories;
 
 namespace LMS.Infrastructure.Services;
 public class CourseService:ICourseService
@@ -20,15 +21,35 @@ public class CourseService:ICourseService
         course.Id=Guid.NewGuid();
         course.CreatedAt=DateTime.UtcNow;
 
-        await _courseRepository.AddAsync(course);
+         _courseRepository.Add(course);
         await _courseRepository.SavechangeAsync();
     }
-    public async Task<List<Course>> GetAllAsync()
+    public async Task<List<CourseResonseDto>> GetAllAsync()
     {
-        return await _courseRepository.GetAllAsync();
+        var courses= await _courseRepository.GetAllAsync();
+        return _mapper.Map<List<CourseResonseDto>>(courses);
     }
-    public async Task<Course?> GetByIdAsync(Guid id)
+    public async Task<CourseResonseDto?> GetByIdAsync(Guid id)
     {
-        return await _courseRepository.GetByIdAsync(id);
+        var course= await _courseRepository.GetByIdAsync(id);
+        return _mapper.Map<CourseResonseDto>(course);
+    }
+    public async Task<bool> UpdateAsync(Guid id,UpdateCourseDto dto)
+    {
+        var course=await _courseRepository.GetByIdAsync(id);
+        if(course==null) return false;
+        _mapper.Map(dto,course);
+        _courseRepository.Update(course);
+        await _courseRepository.SavechangeAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        var course=await _courseRepository.GetByIdAsync(id);
+        if(course==null) return false;
+         _courseRepository.Delete(course);
+        await _courseRepository.SavechangeAsync();
+        return true;
     }
 }

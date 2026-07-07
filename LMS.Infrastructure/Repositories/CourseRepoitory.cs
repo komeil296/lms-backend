@@ -11,9 +11,9 @@ public class CourseRepoitory:ICourseRepository
     {
         _context=context;
     }
-    public async Task AddAsync(Course course)
+    public void Add(Course course)
     {
-        await _context.Courses.AddAsync(course);
+         _context.Courses.AddAsync(course);
     }
     public async Task<List<Course>> GetAllAsync()
     {
@@ -22,6 +22,15 @@ public class CourseRepoitory:ICourseRepository
     public async Task<Course?> GetByIdAsync(Guid id)
     {
         return await _context.Courses.FindAsync(id);
+    }
+    public void Update(Course course)
+    {
+        _context.Courses.Update(course);
+    }
+
+    public void Delete(Course course)
+    {
+        _context.Courses.Remove(course);
     }
     public async Task SavechangeAsync()
     {

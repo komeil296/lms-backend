@@ -1,5 +1,5 @@
-using LMS.Application.CourseNameSpace;
-using LMS.Infrastructure.Services;
+using LMS.Application.DTOs.CourseNameSpace;
+using LMS.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LMS.API.Controllers;
@@ -7,8 +7,8 @@ namespace LMS.API.Controllers;
 [Route("api/[controller]")]
 public class CourseController:ControllerBase
 {
-    private readonly CourseService _service;
-    public CourseController(CourseService service)
+    private readonly ICourseService _service;
+    public CourseController(ICourseService service)
     {
         _service=service;
     }
@@ -23,15 +23,29 @@ public class CourseController:ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var result=await _service.GetAllAsync();
-        return Ok(result);
+
+        return Ok(await _service.GetAllAsync());
     }
     [HttpGet("{id}")]
     public async Task<IActionResult> GetyIdAsync(Guid id)
     {
-        var course=await _service.GetByIdAsync(id);
-        if(course==null) return NotFound();
-        return Ok(course);
+        var result=await _service.GetByIdAsync(id);
+        if(result==null) return NotFound();
+        return Ok(result);
+    }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id,UpdateCourseDto dto)
+    {
+        var updated=await _service.UpdateAsync(id,dto);
+        if(!updated) return NotFound();
+        return Ok("Course updatetd!");
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var deleted=await _service.DeleteAsync(id);
+        if(!deleted) return NotFound();
+        return Ok("Course Deleted!");
     }
 
 }
