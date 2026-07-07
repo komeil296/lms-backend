@@ -1,6 +1,10 @@
 using System.Text;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using LMS.API.Common.Middleware;
 using LMS.Application.Interfaces;
 using LMS.Application.Mappings;
+using LMS.Application.Validators.CourseValidator;
 using LMS.Infrastructure.Data;
 using LMS.Infrastructure.Repositories;
 using LMS.Infrastructure.Services;
@@ -8,7 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-Log.Logger=new LoggerConfiguration().WriteTo.Console().WriteTo.File("logs/lms-.txt",rollingInterval:RollingInterval.Day).CreateLogger();//komil before createBuilder
+Log.Logger=new LoggerConfiguration().WriteTo.Console().WriteTo.File("logs/log-.txt",rollingInterval:RollingInterval.Day).CreateLogger();//komil before createBuilder
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -27,7 +31,8 @@ builder.Services.AddAutoMapper(typeof(AuthMappingProfile));
 builder.Services.AddAutoMapper(typeof(CourseMappingPofile));
 builder.Services.AddScoped<IAUthService,AuthService>();//komeil
 builder.Services.AddScoped<ITokenService,TokenService>();//komeil
-
+builder.Services.AddFluentValidationAutoValidation();//komeil
+builder.Services.AddValidatorsFromAssemblyContaining<CreateCourseDtoValidator>();
 builder.Services.AddScoped<ICourseRepository,CourseRepoitory>();
 builder.Services.AddScoped<ICourseService,CourseService>();
 builder.Services.AddEndpointsApiExplorer();//komeil
@@ -55,7 +60,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

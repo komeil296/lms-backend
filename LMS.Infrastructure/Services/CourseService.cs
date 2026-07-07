@@ -1,19 +1,23 @@
 using AutoMapper;
 using LMS.Application.DTOs.CourseNameSpace;
+using LMS.Application.Exceptions;
 using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
 using LMS.Infrastructure.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace LMS.Infrastructure.Services;
 public class CourseService:ICourseService
 {
     private readonly ICourseRepository _courseRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<CourseService> _logger;
 
-    public CourseService(ICourseRepository courseRepository,IMapper mapper)
+    public CourseService(ICourseRepository courseRepository,IMapper mapper,ILogger<CourseService> logger)
     {
         _courseRepository=courseRepository;
         _mapper=mapper;
+        _logger=logger;
     }
     public async Task CreateAsync(CreateCourseDto dto)
     {
@@ -23,6 +27,7 @@ public class CourseService:ICourseService
 
          _courseRepository.Add(course);
         await _courseRepository.SavechangeAsync();
+        _logger.LogInformation("Course created succesfully CourseId:{CourseID}",course.Id);
     }
     public async Task<List<CourseResonseDto>> GetAllAsync()
     {
@@ -37,7 +42,7 @@ public class CourseService:ICourseService
     public async Task<bool> UpdateAsync(Guid id,UpdateCourseDto dto)
     {
         var course=await _courseRepository.GetByIdAsync(id);
-        if(course==null) return false;
+        if(course==null)  throw new NotFoundException("Course not Found");
         _mapper.Map(dto,course);
         _courseRepository.Update(course);
         await _courseRepository.SavechangeAsync();
@@ -47,7 +52,7 @@ public class CourseService:ICourseService
     public async Task<bool> DeleteAsync(Guid id)
     {
         var course=await _courseRepository.GetByIdAsync(id);
-        if(course==null) return false;
+        if(course==null) throw new NotFoundException("Course not Found");
          _courseRepository.Delete(course);
         await _courseRepository.SavechangeAsync();
         return true;
