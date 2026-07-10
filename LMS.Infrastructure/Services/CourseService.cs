@@ -5,6 +5,7 @@ using LMS.Application.Interfaces;
 using LMS.Domain.Entities;
 using LMS.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 
 namespace LMS.Infrastructure.Services;
 public class CourseService:ICourseService
@@ -19,9 +20,10 @@ public class CourseService:ICourseService
         _mapper=mapper;
         _logger=logger;
     }
-    public async Task CreateAsync(CreateCourseDto dto)
+    public async Task CreateAsync(CreateCourseDto dto,Guid teacherId)
     {
         var course=_mapper.Map<Course>(dto);
+        course.TeacherId=teacherId;
         course.Id=Guid.NewGuid();
         course.CreatedAt=DateTime.UtcNow;
 
@@ -34,6 +36,11 @@ public class CourseService:ICourseService
         var courses= await _courseRepository.GetAllAsync();
         return _mapper.Map<List<CourseResonseDto>>(courses);
     }
+    public async Task<CourseAuthoriztionDto?> GetByIdAsyncForAuthorization(Guid id)
+    {
+         var course= await _courseRepository.GetByIdAsync(id);
+        return _mapper.Map<CourseAuthoriztionDto>(course);
+    }
     public async Task<CourseResonseDto?> GetByIdAsync(Guid id)
     {
         var course= await _courseRepository.GetByIdAsync(id);
@@ -43,6 +50,7 @@ public class CourseService:ICourseService
     {
         var course=await _courseRepository.GetByIdAsync(id);
         if(course==null)  throw new NotFoundException("Course not Found");
+       // if(course.TeacherId!=userId)throw new UnauthorizedAccessException();
         _mapper.Map(dto,course);
         _courseRepository.Update(course);
         await _courseRepository.SavechangeAsync();
@@ -53,6 +61,7 @@ public class CourseService:ICourseService
     {
         var course=await _courseRepository.GetByIdAsync(id);
         if(course==null) throw new NotFoundException("Course not Found");
+        //if(course.TeacherId!=userId)throw new UnauthorizedAccessException();
          _courseRepository.Delete(course);
         await _courseRepository.SavechangeAsync();
         return true;

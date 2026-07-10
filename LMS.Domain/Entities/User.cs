@@ -11,4 +11,6 @@ public class User
     public UserRole Role{get;set;}=UserRole.Student;
     public string? RefreshToken{get;set;}
     public DateTime? RefreshTokenExpiryTime{get;set;}
+
+    public ICollection<Course> Courses{get;set;}=new List<Course>();
 }

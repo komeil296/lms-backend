@@ -14,5 +14,6 @@ public class AppDbContext :DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<User>().Property(u=>u.Role).HasConversion<string>();
+        modelBuilder.Entity<Course>().HasOne(c=>c.Teacher).WithMany(u=>u.Courses).HasForeignKey(c=>c.TeacherId).OnDelete(DeleteBehavior.Restrict);
     }
 }

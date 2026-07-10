@@ -8,6 +8,7 @@ public class CourseMappingPofile:Profile
     {
         CreateMap<CreateCourseDto,Course>();
         CreateMap<Course,CourseResonseDto>();
+        CreateMap<Course,CourseAuthoriztionDto>();
         CreateMap<UpdateCourseDto,Course>();
     }
 }

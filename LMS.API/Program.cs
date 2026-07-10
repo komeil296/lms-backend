@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
+using LMS.API.Authorization;
 Log.Logger=new LoggerConfiguration().WriteTo.Console().WriteTo.File("logs/log-.txt",rollingInterval:RollingInterval.Day).CreateLogger();//komil before createBuilder
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +40,34 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateCourseDtoValidator>()
 builder.Services.AddScoped<ICourseRepository,CourseRepoitory>();
 builder.Services.AddScoped<ICourseService,CourseService>();
 builder.Services.AddEndpointsApiExplorer();//komeil
-builder.Services.AddSwaggerGen();//komeil
+ builder.Services.AddSwaggerGen(
+    options =>
+{
+    options.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme
+    {
+        Name="Authorization",
+        Type=SecuritySchemeType.Http,
+        Scheme="bearer",
+        BearerFormat="JWT",
+        In=ParameterLocation.Header
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference=new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },new List<string>()
+        }
+    });
+    
+}
+);//komeil
 
 var jwt=builder.Configuration.GetSection("JWT");//komeil
 //Komeil -------------------------Auth------------
@@ -53,8 +84,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!))
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // options.AddPolicy("ManageCourse", policy =>
+    // {
+    //     policy.RequireRole("Admin","Teacher");
+    // });
+    options.AddPolicy("CourseOwner", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new CourseOwnerRequirement());
+    });
+});
 //----------------------------------
+builder.Services.AddScoped<IAuthorizationHandler,CourseOwnerHandler>();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -69,15 +112,15 @@ app.MapControllers();//komeil
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    //app.MapOpenApi();
 }
 
 
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// var summaries = new[]
+// {
+//     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+// };
 
 // app.MapGet("/weatherforecast", () =>
 // {

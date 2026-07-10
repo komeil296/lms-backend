@@ -6,4 +6,7 @@ public class Course
     public string Description{get;set;}=string.Empty;
     public decimal Price{get;set;}
     public DateTime CreatedAt{get;set;}=DateTime.UtcNow;
+    //----add relations-----
+    public Guid TeacherId{get;set;}
+    public User Teacher{get;set;}=null!;
 }
