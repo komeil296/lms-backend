@@ -25,9 +25,9 @@ public class UserRepository : IUserRepository
     {
         await _context.SaveChangesAsync();
     }
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    public async Task<User?> GetByRefreshTokenHashAsync(string refreshToken)
     {
-        return await _context.Users.FirstOrDefaultAsync(x=>x.RefreshToken==refreshToken);
+        return await _context.Users.FirstOrDefaultAsync(x=>x.RefreshTokenHash==refreshToken);
     }
 
 }

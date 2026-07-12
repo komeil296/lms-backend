@@ -1,6 +1,8 @@
+using LMS.Domain.Entities;
+
 namespace LMS.Application.Interfaces;
 public interface IPasswordService
 {
-    string HashPassword(string password);
-    bool VerifyPassword(string password,string hashedPassword);
+    string HashPassword(User user,string passsword);
+    bool VerifyPassword(User user,string password,string hashedPassword);
 }

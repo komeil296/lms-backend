@@ -7,10 +7,11 @@ public class User
     public string Username{get;set;}=string.Empty;
     public string PasswordHash{get;set;}=string.Empty;
 
-    public DateTime CraetedAt{get;set;}=DateTime.UtcNow;
+    public DateTime CreatedAt{get;set;}=DateTime.UtcNow;
     public UserRole Role{get;set;}=UserRole.Student;
-    public string? RefreshToken{get;set;}
+    public string? RefreshTokenHash{get;set;}
     public DateTime? RefreshTokenExpiryTime{get;set;}
 
     public ICollection<Course> Courses{get;set;}=new List<Course>();
+    public ICollection<Enrollment> Enrollments{get;set;}=new List<Enrollment>();
 }

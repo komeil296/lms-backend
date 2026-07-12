@@ -29,10 +29,34 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
     [HttpPost("logout")]
-    public async Task<IActionResult> LogOut(string refreshToken)
+    public async Task<IActionResult> LogOut([FromBody] RefreshTokenRequestDto dto)
     {
-        var result=await _authService.LogoutAsync(refreshToken);
-        if(!result) return BadRequest("Invalid Token!");
-        return Ok("Logged out successfully!");
+        if (string.IsNullOrWhiteSpace(dto.RefreshToken))
+        {
+            return BadRequest("Refresh token is required");
+        }
+
+        var result=await _authService.LogoutAsync(dto.RefreshToken);
+
+        if (!result)
+        {
+            return Unauthorized("Invalid refresh token.");
+        }
+        return NoContent();
+    }
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.RefreshToken))
+        {
+            return BadRequest("Refresh Token is required!");
+        }
+
+        var result=await _authService.RefreshTokenAsync(dto.RefreshToken);
+        if(result is null)
+        {
+            return Unauthorized("Invalid or expired refresh token");
+        }
+        return Ok(result);
     }
 }

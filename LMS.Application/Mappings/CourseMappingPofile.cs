@@ -7,7 +7,9 @@ public class CourseMappingPofile:Profile
     public CourseMappingPofile()
     {
         CreateMap<CreateCourseDto,Course>();
-        CreateMap<Course,CourseResonseDto>();
+        CreateMap<Course,CourseResonseDto>().ForMember(
+            dest=>dest.TeacherName,opt=>opt.MapFrom(src=>src.Teacher.Username)
+        );
         CreateMap<Course,CourseAuthoriztionDto>();
         CreateMap<UpdateCourseDto,Course>();
     }

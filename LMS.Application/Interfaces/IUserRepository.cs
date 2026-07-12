@@ -6,5 +6,5 @@ public interface IUserRepository
     Task<User?> GetByUSernameAsync(string username);
     Task AddAsync(User user);
     Task SaveChangesAsync();
-    Task<User?> GetByRefreshTokenAsync(string refreshToken);
+    Task<User?> GetByRefreshTokenHashAsync(string refreshTokenHash);
 }

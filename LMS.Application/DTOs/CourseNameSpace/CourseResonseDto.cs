@@ -6,5 +6,6 @@ public class CourseResonseDto
     public string Description{get;set;}=string.Empty;
     public decimal Price{get;set;}
     public DateTime CreatedAt{get;set;}
+    public string TeacherName{get;set;}=string.Empty;
     
 }

@@ -13,15 +13,16 @@ public class CourseRepoitory:ICourseRepository
     }
     public void Add(Course course)
     {
-         _context.Courses.AddAsync(course);
+        ArgumentNullException.ThrowIfNull(course);
+         _context.Courses.Add(course);
     }
     public async Task<List<Course>> GetAllAsync()
     {
-        return await _context.Courses.ToListAsync();
+        return await _context.Courses.AsNoTracking().Include(x=>x.Teacher).ToListAsync();
     }
     public async Task<Course?> GetByIdAsync(Guid id)
     {
-        return await _context.Courses.FindAsync(id);
+        return await _context.Courses.Include(x=>x.Teacher).FirstOrDefaultAsync(x=>x.Id==id);
     }
     public void Update(Course course)
     {

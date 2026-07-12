@@ -1,20 +1,26 @@
-using System.Security.Cryptography;
-using System.Text;
 using LMS.Application.Interfaces;
+using LMS.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace LMS.Infrastructure.Services;
 public class PasswordService : IPasswordService
 {
-      public string HashPassword(string password)
+    private readonly PasswordHasher<User> _passwordHasher=new();
+
+    public string HashPassword(User user,string passsword)
     {
-        using var sha=SHA256.Create();
-        var bytes=Encoding.UTF8.GetBytes(password);
-        var hash=sha.ComputeHash(bytes);
-        return Convert.ToBase64String(hash);
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentException.ThrowIfNullOrWhiteSpace(passsword);
+        return _passwordHasher.HashPassword(user,passsword);
     }
-    public bool VerifyPassword(string password,string hashedPassword)
+
+    public  bool VerifyPassword(User user,string password,string hashedPassword)
     {
-        var newHash=HashPassword(password);
-        return newHash==hashedPassword;
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        ArgumentException.ThrowIfNullOrWhiteSpace(hashedPassword);
+        
+        var result=_passwordHasher.VerifyHashedPassword(user,hashedPassword,password);
+        return result is PasswordVerificationResult.Success or PasswordVerificationResult.SuccessRehashNeeded;
     }
 }

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using AutoMapper;
 using Azure.Core;
 using LMS.Application.DTOs;
@@ -15,6 +17,17 @@ public class AuthService:IAUthService
     private readonly IMapper _mapper;
     private readonly ILogger<AuthService> _logger;
     private readonly ITokenService _tokenService;
+    private static string HashRefreshToken(string refreshToken)
+    {
+        
+        ArgumentException.ThrowIfNullOrWhiteSpace( refreshToken);
+
+        var tokenBytes =Encoding.UTF8.GetBytes(refreshToken);
+
+        var hashBytes =SHA256.HashData(tokenBytes);
+
+        return Convert.ToHexString(hashBytes);
+    }
     public AuthService(IUserRepository userRepository,IPasswordService passwordSrvice,IMapper mapper,ILogger<AuthService> logger,ITokenService tokenService)
     {
         _userRepository=userRepository;
@@ -28,7 +41,7 @@ public class AuthService:IAUthService
         var existing=await _userRepository.GetByUSernameAsync(dto.Username);
         if (existing != null) return false;
         var user=_mapper.Map<User>(dto);
-        user.PasswordHash=_passwordService.HashPassword(dto.Password);
+        user.PasswordHash=_passwordService.HashPassword(user,dto.Password);
         user.Role=UserRole.Student;
         await _userRepository.AddAsync(user);
         await _userRepository.SaveChangesAsync();
@@ -40,12 +53,13 @@ public class AuthService:IAUthService
     {
         var user=await _userRepository.GetByUSernameAsync(dto.Username);
         if(user==null) return null;
-        if(!_passwordService.VerifyPassword(dto.Password,user.PasswordHash)) return null;
+        if(!_passwordService.VerifyPassword(user,dto.Password,user.PasswordHash)) return null;
         
     
         var accessToken=_tokenService.CreateToken(user);
         var refreshToken=_tokenService.GenerateRefreshToken();
-        user.RefreshToken=refreshToken;
+
+        user.RefreshTokenHash=HashRefreshToken(refreshToken);
         user.RefreshTokenExpiryTime=DateTime.UtcNow.AddDays(7);
 
         await _userRepository.SaveChangesAsync();
@@ -58,15 +72,22 @@ public class AuthService:IAUthService
     }
     public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken)
     {
-        var user=await _userRepository.GetByRefreshTokenAsync(refreshToken);
-        if(user==null) return null;
-        if(user.RefreshTokenExpiryTime<DateTime.UtcNow) return null;
-        
+        if(string.IsNullOrWhiteSpace(refreshToken)) return null;
+
+        var refreshTokenHash=HashRefreshToken(refreshToken);
+        var user=await _userRepository.GetByRefreshTokenHashAsync(refreshToken);
+
+        if(user is null) return null;
+        if(user.RefreshTokenExpiryTime is null ||user.RefreshTokenExpiryTime<=DateTime.UtcNow) return null;
+
         var newAccessToken=_tokenService.CreateToken(user);
         var newRefreshToken=_tokenService.GenerateRefreshToken();
-        user.RefreshToken=newRefreshToken;
+
+        user.RefreshTokenHash=newRefreshToken;
         user.RefreshTokenExpiryTime=DateTime.UtcNow.AddDays(7);
+
         await _userRepository.SaveChangesAsync();
+
         return new AuthResponseDto
         {
             AccessToken=newAccessToken,
@@ -76,11 +97,17 @@ public class AuthService:IAUthService
 
     public async Task<bool> LogoutAsync(string refreshToken)
     {
-        var user=await _userRepository.GetByRefreshTokenAsync(refreshToken);
-        if(user==null) return false;
-        user.RefreshToken=null;
+        if(string.IsNullOrWhiteSpace(refreshToken)) return false;
+
+        var user=await _userRepository.GetByRefreshTokenHashAsync(refreshToken);
+
+        if(user is null) return false;
+
+        user.RefreshTokenHash=null;
         user.RefreshTokenExpiryTime=null;
+
         await _userRepository.SaveChangesAsync();
+        
         return true;
 
 

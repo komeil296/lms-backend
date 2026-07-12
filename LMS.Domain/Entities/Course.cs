@@ -9,4 +9,5 @@ public class Course
     //----add relations-----
     public Guid TeacherId{get;set;}
     public User Teacher{get;set;}=null!;
+    public ICollection<Enrollment> Enrollments{get;set;}=new List<Enrollment>();//navigation property
 }
