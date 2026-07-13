@@ -31,14 +31,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUserRepository,UserRepository>();//komeil
 builder.Services.AddScoped<IPasswordService,PasswordService>();//komeil
 ///builder.Services.AddAutoMapper(Assembly.Load("LMS.Application"));//komeil
-builder.Services.AddAutoMapper(typeof(AuthMappingProfile));
-builder.Services.AddAutoMapper(typeof(CourseMappingPofile));
+// builder.Services.AddAutoMapper(typeof(AuthMappingProfile));
+// builder.Services.AddAutoMapper(typeof(CourseMappingPofile));
+builder.Services.AddAutoMapper(typeof(AuthMappingProfile).Assembly);
 builder.Services.AddScoped<IAUthService,AuthService>();//komeil
 builder.Services.AddScoped<ITokenService,TokenService>();//komeil
 builder.Services.AddFluentValidationAutoValidation();//komeil
 builder.Services.AddValidatorsFromAssemblyContaining<CreateCourseDtoValidator>();
 builder.Services.AddScoped<ICourseRepository,CourseRepoitory>();
 builder.Services.AddScoped<ICourseService,CourseService>();
+builder.Services.AddScoped<IEnrollmentRepository,EnrollmentRepository>();
+builder.Services.AddScoped<IEnrollService,EnrollmentService>();
 builder.Services.AddEndpointsApiExplorer();//komeil
  builder.Services.AddSwaggerGen(
     options =>
