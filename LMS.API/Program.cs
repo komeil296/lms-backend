@@ -42,6 +42,8 @@ builder.Services.AddScoped<ICourseRepository,CourseRepoitory>();
 builder.Services.AddScoped<ICourseService,CourseService>();
 builder.Services.AddScoped<IEnrollmentRepository,EnrollmentRepository>();
 builder.Services.AddScoped<IEnrollService,EnrollmentService>();
+builder.Services.AddScoped<ILessonRepository,LessonRepository>();
+builder.Services.AddScoped<ILessonService,LessonService>();
 builder.Services.AddEndpointsApiExplorer();//komeil
  builder.Services.AddSwaggerGen(
     options =>

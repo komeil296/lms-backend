@@ -10,4 +10,5 @@ public class Course
     public Guid TeacherId{get;set;}
     public User Teacher{get;set;}=null!;
     public ICollection<Enrollment> Enrollments{get;set;}=new List<Enrollment>();//navigation property
+    public ICollection<Lesson> Lessons{get;set;}=new List<Lesson>();//navigation property
 }

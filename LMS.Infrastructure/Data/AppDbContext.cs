@@ -12,6 +12,7 @@ public class AppDbContext :DbContext
     public DbSet<User> Users=>Set<User>();
     public DbSet<Course> Courses=>Set<Course>();
     public DbSet<Enrollment> Enrollments=>Set<Enrollment>();
+    public DbSet<Lesson> Lessons=>Set<Lesson>();
      protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -59,5 +60,25 @@ public class AppDbContext :DbContext
             e.StudentId,
             e.CourseId
         }).IsUnique();
+    }
+
+    private static void ConfigureLesson(ModelBuilder modelBuilder)
+    {
+        var lesson=modelBuilder.Entity<Lesson>();
+        lesson.ToTable("Lessons");
+        lesson.HasKey(l=>l.Id);
+        
+        lesson.Property(l=>l.Title).HasMaxLength(200).IsRequired();
+        lesson.Property(l=>l.Content).IsRequired();
+        lesson.Property(l=>l.VideoUrl).HasMaxLength(2048);
+        lesson.Property(l=>l.OrderIndex).IsRequired();
+        lesson.Property(l=>l.IsPublished).HasDefaultValue(false).IsRequired();
+        lesson.Property(l=>l.CreatedAt).IsRequired();
+
+        lesson.HasOne(l=>l.Course).WithMany(c=>c.Lessons).HasForeignKey(l=>l.CourseId).OnDelete(DeleteBehavior.Cascade);
+
+        lesson.HasIndex(l=>new{l.CourseId,l.OrderIndex}).IsUnique();
+
+
     }
 }
